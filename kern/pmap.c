@@ -157,18 +157,16 @@ mem_init(void)
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
 
-	/* Našou úlohou (zatiaľ) je alokovať pole štruktúr PageInfo a uložiť ho do pages.
-	 * Ak ste niekedy už používali malloc v C, tak je to to isté.
-	 * Po tom ako ho alokujeme, tak vynulujeme jeho obsah pomocou memsetu.
-	 * Viac info o funkcii memset v "lib/string.c".
-	 */
+	
 	pages = (struct PageInfo *) boot_alloc(sizeof(struct PageInfo) * npages);
 	memset(pages, 0, sizeof(struct PageInfo) * npages);
 
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
-
+	envs = (struct Env *) boot_alloc(sizeof(struct Env) * NENV);
+	memset(envs, 0, sizeof(struct Env) * NENV);
+	
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
 	// up the list of free physical pages. Once we've done so, all further
@@ -204,7 +202,11 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
-
+	boot_map_region(kern_pgdir,
+					UENVS,
+					NENV * sizeof(struct Env),
+					PADDR(envs),
+					(PTE_U | PTE_P));
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
 	// stack.  The kernel stack grows down from virtual address KSTACKTOP.
