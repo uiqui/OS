@@ -290,7 +290,14 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
-
+	int i;
+	for (i = 0; i < NCPU; ++i) {
+		boot_map_region(kern_pgdir, 
+			KSTACKTOP - KSTKSIZE - i * (KSTKSIZE + KSTKGAP), 
+			KSTKSIZE, 
+			PADDR(percpu_kstacks[i]), 
+			PTE_W);
+	}
 }
 
 // --------------------------------------------------------------
@@ -329,37 +336,20 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-	/*page_free_list = NULL;
-
-	for (size_t i = 0; i < npages; i++) {
-		if (i == 0) {
-			pages[i].pp_ref = 1;
-			pages[i].pp_link = NULL;
-		} else if ((page2pa(&pages[i]) + PGSIZE >= IOPHYSMEM) && (page2kva(&pages[i]) < boot_alloc(0))) {
-			pages[i].pp_ref = 1;
-			pages[i].pp_link = NULL;
-		} else {
-			pages[i].pp_ref = 0;
-			pages[i].pp_link = page_free_list;
-			page_free_list = &pages[i];
-		}
-	}*/
 
 	size_t i;
-	for (i = 1; i < npages_basemem; i++) {
+	for (i = 1; i < MPENTRY_PADDR/PGSIZE; i++) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
 	}
 	int med = (int)ROUNDUP(((char*)envs) + (sizeof(struct Env) * NENV) - 0xf0000000, PGSIZE)/PGSIZE;
-	cprintf("%x\n", ((char*)envs) + (sizeof(struct Env) * NENV));
-	cprintf("med=%d\n", med);
+	cprintf("med: %x\n", med);
 	for (i = med; i < npages; i++) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
-}
-
+}	
 }
 
 //
@@ -635,7 +625,13 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+	size = ROUNDUP(pa+size, PGSIZE);
+	pa = ROUNDDOWN(pa, PGSIZE);
+	size -= pa;
+	if (base+size >= MMIOLIM) panic("not enough memory");
+	boot_map_region(kern_pgdir, base, size, pa, PTE_PCD|PTE_PWT|PTE_W);
+	base += size;
+	return (void*) (base - size);
 }
 
 static uintptr_t user_mem_check_addr;

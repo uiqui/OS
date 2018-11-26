@@ -119,23 +119,9 @@ env_init(void)
 {
 	// Set up envs array
 	// LAB 3: Your code here.
-	//struct Env* next =env_free_list;
-
-	//for (size_t i = 0; i < NENV; i++) 
-	//{
-	//	(*(envs[i])).env_status = ENV_FREE;
-	//	(*(envs[i])).env_ids = 0;
-	//	next->env_link= envs[i];
-	//	next =(envs[i]);
-	//}
-	//e->next = env_free_list;
-	//env_free_list = e;
-	//poradie checknut 3 - 2 - 1
 	int i;
 	for (i = NENV-1;i >= 0; --i) {
-	//initialize backwards to maintain the order
 		envs[i].env_id = 0;
-		//normal link-list routine
 		envs[i].env_link = env_free_list;
 		env_free_list = envs+i;
 	}
@@ -554,7 +540,7 @@ env_pop_tf(struct Trapframe *tf)
 {
 	// Record the CPU we are running on for user-space debugging
 	curenv->env_cpunum = cpunum();
-
+	unlock_kernel();
 	asm volatile(
 		"\tmovl %0,%%esp\n"
 		"\tpopal\n"
@@ -593,13 +579,7 @@ env_run(struct Env *e)
 	//	e->env_tf to sensible values.
 
 	// LAB 3: Your code here.
-	/*if(curenv && curenv->env_status ==ENV_RUNNING)
-		curenv->env_status = ENV_RUNNABLE;
-	curenv = e;
-	curenv->env_status= ENV_RUNNING;
-	curenv-env_runs++;
-	lcr3(e->env_pgdir);
-*/
+
 	//panic("env_run not yet implemented");
 	if (e->env_status == ENV_RUNNING)
 		e->env_status = ENV_RUNNABLE;

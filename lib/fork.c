@@ -78,7 +78,8 @@ envid_t
 fork(void)
 {
 	// LAB 4: Your code here.
-	panic("fork not implemented");
+	panic("fork");
+
 }
 
 // Challenge!
